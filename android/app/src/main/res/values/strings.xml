@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">speed</string>
+    <string name="title_activity_main">speed</string>
+    <string name="package_name">www.speedv1.com.ec</string>
+    <string name="custom_url_scheme">www.speedv1.com.ec</string>
+</resources>
