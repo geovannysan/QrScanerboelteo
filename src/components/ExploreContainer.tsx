@@ -3,6 +3,7 @@ import './ExploreContainer.css';
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
 import { IonButton, IonContent, useIonViewWillLeave } from '@ionic/react';
 import { decode } from 'js-base64';
+import { Boleto } from '../utils';
 const ExploreContainer: React.FC = () => {
   const [barcodeData, setBarcodeData] = useState('');
   const [scanActivo, setScanActivo] = useState(false);
@@ -40,6 +41,8 @@ const ExploreContainer: React.FC = () => {
           setScan({ ...datosScn, ...JSON.parse(decode(result.content)) });
           if (dat.id) {
             setBarcodeData(dat.id);
+            const data:any = await Boleto(dat.id);
+            alert(JSON.stringify(data));
           } else {
             setBarcodeData("")
           }
