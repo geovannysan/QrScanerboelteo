@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import './ExploreContainer.css';
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
-import { IonButton, IonContent, useIonViewWillLeave } from '@ionic/react';
+import { IonBadge, IonButton, IonButtons, IonCol, IonContent, IonFooter, IonGrid, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonList, IonModal, IonTitle, IonToolbar, useIonViewWillLeave } from '@ionic/react';
 import { decode } from 'js-base64';
 import { Boleto } from '../utils';
+import { close, chevronForward, umbrella } from "ionicons/icons";
+
 const ExploreContainer: React.FC = () => {
   const [barcodeData, setBarcodeData] = useState('');
   const [scanActivo, setScanActivo] = useState(false);
-  const [datosScn, setScan] = useState({ id: "" })
-
+  const [datosScn, setScan] = useState<any>({ id: "" })
+  const [showModal, setModal] = useState(false);
 
   const checkPermisos = async () => {
     try {
@@ -25,6 +27,47 @@ const ExploreContainer: React.FC = () => {
     }
   };
 
+  const guardarDatosScann = async (e: any) => {
+    const ides: any = document.getElementById('barcode')
+    //console.log(e, ides.value)
+    //return
+    if (e != "Enter") return
+    if (ides.value.length > 6 && !Number.isInteger(ides.value)) {
+      setScanActivo(false);
+      const dat: any = JSON.parse(decode(ides.value))
+      setScan({ ...datosScn, ...JSON.parse(decode(ides.value)) });
+
+      if (dat.id) {
+        ides.value = dat.id
+        setBarcodeData(dat.id);
+        const data: any = await Boleto(dat.id);
+        if (!data.estado) return alert(data.mensaje);
+
+        console.log(data)
+        setScan({ ...datosScn, ...data.boleto });
+        setModal(true)
+        // alert(JSON.stringify(data));
+
+      } else {
+        setBarcodeData("")
+      }
+    } else {
+      setScan({ id: ides.value });
+      setBarcodeData(ides.value);
+      if (ides.value) {
+        setBarcodeData(ides.value);
+
+        const data: any = await Boleto(ides.value);
+        if (!data.estado) return alert(data.mensaje);
+        console.log(data)
+        setScan({ ...datosScn, ...data.boleto });
+        setModal(true)
+        //alert(JSON.stringify(data));
+      } else {
+        setBarcodeData("")
+      }
+    }
+  }
   const startScanner = async () => {
     const allow = await checkPermisos();
     if (allow) {
@@ -41,8 +84,10 @@ const ExploreContainer: React.FC = () => {
           setScan({ ...datosScn, ...JSON.parse(decode(result.content)) });
           if (dat.id) {
             setBarcodeData(dat.id);
-            const data:any = await Boleto(dat.id);
-            alert(JSON.stringify(data));
+            const data: any = await Boleto(dat.id);
+            setModal(true)
+            setScan({ ...datosScn, ...data.boleto });
+            // alert(JSON.stringify(data));
           } else {
             setBarcodeData("")
           }
@@ -73,11 +118,74 @@ const ExploreContainer: React.FC = () => {
     setScanActivo(false);
   });
   return (
+
     <IonContent fullscreen={true}
       style={{
         background: "#ffffff !important"
       }}
     >
+      <IonModal isOpen={showModal}
+        onDidDismiss={() => setModal(false)}
+        initialBreakpoint={0.75} breakpoints={[0, 0.25, 0.5, 0.75, 1]}
+        backdropDismiss={false}>
+        <IonHeader className=" bg-welcome">
+          <IonToolbar className=""
+            style={{
+              color: "#ffffs"
+            }}
+          >
+            
+
+            <IonButtons slot="end"  >
+              <IonButton
+                onClick={() => setModal(false)}>
+                <IonIcon className=" fw-bold" size="large" icon={close} ></IonIcon>
+              </IonButton>
+            </IonButtons>
+          </IonToolbar>
+        </IonHeader>
+        <IonToolbar>
+          {Object.values(datosScn).length > 2 ? <div className=''>
+
+            {datosScn.canjeBoleto == "NO CANJEADO" ?
+              <div className='bg-success container-fluid  fw-bold text-center' style={{
+                width: "100%", height: '10vh', display: 'flex', flexDirection: 'column', justifyContent: 'center'
+              }}>{datosScn.canjeBoleto}</div> : <div className='bg-danger container-fluid  fw-bold text-center' style={{
+                width: "100%", height: '10vh', display: 'flex', flexDirection: 'column', justifyContent: 'center'
+              }}>Canjeado</div>
+            }
+          </div> : ''}
+        </IonToolbar>
+        <IonContent>
+          
+          <IonList>
+            {Object.values(datosScn).length > 2 ?
+
+              Object.values(datosScn).map((item, ind) => (
+                <IonItem key={ind}>
+                  <IonLabel>
+                    {Object.keys(datosScn)[ind] + ":" + item}
+                  </IonLabel>
+                </IonItem>
+
+              )
+
+              )
+              : ""}
+          </IonList>
+          
+        </IonContent>
+        <IonFooter>
+          <IonToolbar>
+            {Object.values(datosScn).length > 2 ? <div className=''>
+
+              {datosScn.canjeBoleto == "NO CANJEADO" ?
+                <div className=' container'>    <IonButton >Canjear</IonButton></div> : <div className='bg-danger'>Canjeado</div>
+              }
+            </div> : ''}
+          </IonToolbar>
+        </IonFooter>
+      </IonModal >
       <div className="container">
         <strong style={{
           display: 'none'
@@ -85,10 +193,29 @@ const ExploreContainer: React.FC = () => {
         <p style={{
           display: 'none'
         }} className='d-none'>Explore <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
+        <div className=' ion-container'
+          style={{
+            display: ""
+          }}
+        >
+
+          <IonGrid>
+            <IonCol >
+              <IonInput
+                id='barcode'
+                placeholder='Código de barras o QR'
+
+                onKeyPress={e => guardarDatosScann(e.key)}
+                counter={true}
+              />
+            </IonCol>
+          </IonGrid>
+        </div>
+        {barcodeData && <p>Barcode Data Registro compra: {datosScn.id}</p>}
         {scanActivo ? "" : <div id='content' className='row'>
           <IonButton onClick={startScanner}>Iniciar escáner</IonButton>
 
-          {barcodeData && <p>Barcode Data: {datosScn.id}</p>}
+
         </div>}
       </div>
       {scanActivo ? <div className="scan-box" ></div>
