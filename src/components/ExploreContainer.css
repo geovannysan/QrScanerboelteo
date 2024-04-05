@@ -22,3 +22,85 @@
 .container a {
   text-decoration: none;
 }
+
+
+/* card detalle */
+.job-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.2em;
+  box-shadow: #091e4240 0px 1px 1px, #091e4221 0px 0px 1px 1px;
+  border-radius: 0.6em;
+  padding: 1em;
+  max-width: 30em;
+}
+
+
+.text-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 1.25em;
+  font-weight: 600;
+  font-family: "Noto Sans", sans-serif;
+}
+
+.text-body {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-family: "Poppins", sans-serif;
+  letter-spacing: 0.4px;
+}
+
+.post-date {
+  color: #598551;
+}
+
+.budget-exp {
+  display: flex;
+  gap: 4em;
+  justify-content: space-around;
+}
+
+.budget-exp .value {
+  font-size: 1em;
+  font-weight: 600;
+}
+
+.budget-exp .label {
+  font-size: 1em;
+  color: #598551;
+}
+
+.card-btn {
+  border: none;
+  font-size: 1rem;
+  background-color: green;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-radius: 2em;
+  padding: 0.6em 1em;
+}
+
+.card-btn:hover {
+  background-color: #026602;
+}
+
+.tags article {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6em;
+  justify-content: center;
+}
+
+.tags p {
+  border-radius: 1.2em;
+  padding: 0.2em 0.5em;
+  background-color: #f2f7f2;
+  color: #598551;
+}
