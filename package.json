@@ -64,7 +64,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test --transformIgnorePatterns 'node_modules/(?!(@ionic/react|@ionic/react-router|@ionic/core|@stencil/core|ionicons)/)'",
     "eject": "react-scripts eject",
-    "lint": "eslint --ext .ts,.tsx src"
+    "lint": "eslint --ext .ts,.tsx src",
+    "build:ios": "ionic build --prod && npx cap sync --force && npx cap copy ios"
   },
   "browserslist": [
     "Chrome >=79",
