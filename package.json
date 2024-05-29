@@ -65,7 +65,7 @@
     "test": "react-scripts test --transformIgnorePatterns 'node_modules/(?!(@ionic/react|@ionic/react-router|@ionic/core|@stencil/core|ionicons)/)'",
     "eject": "react-scripts eject",
     "lint": "eslint --ext .ts,.tsx src",
-    "appflow:build": "npm install --force && some-build-command"
+    "appflow:build": "npm install --force && npm ci --force && some-build-command"
   },
   "browserslist": [
     "Chrome >=79",
