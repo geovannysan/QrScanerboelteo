@@ -6,6 +6,40 @@
   top: 50%;
   transform: translateY(-50%);
 }
+#canvas {
+  position: relative;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  min-width: 0;
+  word-wrap: break-word;
+  background-color: #fff;
+  background-clip: border-box;
+  border: 1.5px solid rgba(0, 0, 0, .125);
+  border-radius: 0.25rem;
+
+}
+
+#canvasmovil {
+  position: relative;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  min-width: 0;
+  word-wrap: break-word;
+  background-color: #fff;
+  background-clip: border-box;
+  border: 1.5px solid rgba(0, 0, 0, .125);
+  border-radius: 0.25rem;
+}
 
 .container strong {
   font-size: 20px;

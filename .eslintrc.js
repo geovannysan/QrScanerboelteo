@@ -1,4 +1,4 @@
-module.exports = {
+/*module.exports = {
   root: true,
   env: {
     browser: true,
@@ -7,16 +7,16 @@ module.exports = {
   extends: [
     'eslint:recommended',
     'plugin:react/recommended',
-    'plugin:@typescript-eslint/recommended'
+    //'plugin:@typescript-eslint/recommended'
   ],
-  parser: '@typescript-eslint/parser',
+  //parser: '@typescript-eslint/parser',
   parserOptions: {
-    ecmaVersion: 'latest',
+   // ecmaVersion: 'latest',
     sourceType: 'module'
   },
   plugins: [
     'react',
-    '@typescript-eslint'
+   // '@typescript-eslint'
   ],
   settings: {
     react: {
@@ -27,4 +27,4 @@ module.exports = {
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
   }
-}
+}*/
