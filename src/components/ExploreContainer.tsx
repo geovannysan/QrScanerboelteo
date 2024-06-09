@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './ExploreContainer.css';
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
-import { IonBadge, IonButton, IonButtons, IonCol, IonContent, IonFooter, IonGrid, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonList, IonModal, IonSegment, IonSegmentButton, IonTitle, IonToolbar, isPlatform, useIonViewWillLeave } from '@ionic/react';
+import { IonAlert, IonBadge, IonButton, IonButtons, IonCol, IonContent, IonFooter, IonGrid, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonList, IonModal, IonSegment, IonSegmentButton, IonTitle, IonToolbar, isPlatform, useIonViewWillLeave } from '@ionic/react';
 import { decode } from 'js-base64';
 import { Boleto, Canjear, LoginUser, getUsuario } from '../utils';
 import { close, chevronForward, umbrella } from "ionicons/icons";
@@ -12,11 +12,13 @@ import Firmas from './Firma';
 
 
 const ExploreContainer: React.FC = () => {
+
   const [barcodeData, setBarcodeData] = useState('');
   const [scanActivo, setScanActivo] = useState(false);
   const [datosScn, setScan] = useState<any>({ id: "" })
   const [mac, setMAc] = useState<string>('')
   const [show, setShow] = useState(false);
+  const [showv, setShowv] = useState(false);
   const [message, setmessage] = useState("");
   const [credenciales, setnombre] = useState({
     username: '',
@@ -73,7 +75,6 @@ const ExploreContainer: React.FC = () => {
         setScan({ ...datosScn, ...data.boleto, comentario: data.comentario, fechacanje: data.fechacanje });
         setModal(true)
         setModalFir(false)
-
       } else {
         setBarcodeData("")
       }
@@ -96,6 +97,7 @@ const ExploreContainer: React.FC = () => {
   const startScanner = async () => {
     const allow = await checkPermisos();
     if (allow) {
+      const idboleto:any = document.getElementById('barcode')
       setScanActivo(true);
       (window.document.querySelector('ion-app') as HTMLElement).classList.add('cameraView');
       BarcodeScanner.hideBackground();
@@ -109,6 +111,7 @@ const ExploreContainer: React.FC = () => {
           if (dat.id) {
             setBarcodeData(dat.id);
             const data: any = await Boleto(dat.id);
+            idboleto.value = '' + dat.id
             setModal(true)
             setScan({ ...datosScn, ...data.boleto, comentario: data.comentario, fechacanje: data.fechacanje });
           } else {
@@ -137,9 +140,10 @@ const ExploreContainer: React.FC = () => {
     setScan({})
     setModal(false)
   }
-  const verificarundefiner = (e: any) =>{
-   // console.log(e)
-    return (e != undefined || e!= null) ? e : "valor indefinido"}
+  const verificarundefiner = (e: any) => {
+    // console.log(e)
+    return (e != undefined || e != null) ? e : "valor indefinido"
+  }
   useIonViewWillLeave(() => {
     BarcodeScanner.stopScan();
     setScanActivo(false);
@@ -230,14 +234,21 @@ const ExploreContainer: React.FC = () => {
       {datosScn.canjeBoleto}
     </div>)
   }
- function VerVoucher(){
-   const url = datosScn.link_pago == null ? datosScn.link_comprobante : datosScn.link_pago.replace("k/", "k/voucher/");
-   if(!(datosScn.id_espacio_localida==1)){
-    window.open( url, '_blank');
-   }else{
-     window.open(datosScn.status_pg, '_blank');
-   }
- }
+  function VerVoucher() {
+    // return setShowv(true)
+    const url = datosScn.link_pago == null ? datosScn.link_comprobante : datosScn.link_pago.replace("k/", "k/voucher/");
+    if (!(datosScn.id_espacio_localida == 1)) {
+
+      window.open(url, '_blank');
+      //setmessage(url)
+      //setShowv(true)
+    } else {
+      
+      //setmessage(datosScn.status_pg)
+      window.open(datosScn.status_pg, '_blank');
+     // setShowv(true)
+    }
+  }
   useEffect(() => {
     getMAc()
     const token = getUsuario()
@@ -304,7 +315,27 @@ const ExploreContainer: React.FC = () => {
               </IonSegment>
             </IonToolbar>
             <IonContent>
-
+              <IonAlert
+                header="Desea canjear este boleto?"
+                trigger="present-alert"
+                buttons={[
+                  {
+                    text: 'Cancelar',
+                    role: 'cancel',
+                    handler: () => {
+                      console.log('Alert canceled');
+                    },
+                  },
+                  {
+                    text: 'Aceptar',
+                    role: 'confirm',
+                    handler: () => {
+                      CanjearBoleto()
+                    },
+                  },
+                ]}
+                onDidDismiss={({ detail }) => console.log(`Dismissed with role: ${detail.role}`)}
+              ></IonAlert>
               {tabs == "Detalle" ?
                 <IonList>
                   {Object.values(datosScn).length > 2 ?
@@ -385,16 +416,16 @@ const ExploreContainer: React.FC = () => {
                       </div>
 
                       <div className='d-flex justify-content-around '>
-                        {datosScn.forma_pago=="Tarjeta"?<a>
-                          {datosScn.id_espacio_localida == 1 ? <button className="card-btn bg-success" onClick={VerVoucher} > VER FIRMA</button>:
+                        {datosScn.forma_pago == "Tarjeta" ? <a>
+                          {datosScn.id_espacio_localida == 1 ? <button className="card-btn bg-success" onClick={VerVoucher} > VER FIRMA</button> :
                             <button className="card-btn bg-warning" onClick={VerVoucher}>
-                             VER VOUCHER</button>}
-                        </a>:""}
+                              VER VOUCHER</button>}
+                        </a> : ""}
                         <a >
-                            <div className="tags ">
-                        <article className=' fw-bold'>
+                          <div className="tags ">
+                            <article className=' fw-bold'>
                               <p className=''>{datosScn.estado_autorizacion_sri ? "FACTURADO" : "NO FACTURADO"}</p>
-                        </article>
+                            </article>
                           </div>
                           <button className="card-btn d-none" >{datosScn.estado_autorizacion_sri ? "FACTURADO" : "NO FACTURADO"}</button>
                         </a>
@@ -433,14 +464,15 @@ const ExploreContainer: React.FC = () => {
                 {Object.values(datosScn).length > 2 ? <div className=''>
 
                   {datosScn.canjeBoleto == "NO CANJEADO" ?
-                    <div className=' container'>    {(datosScn.id_espacio_localida != 1 && datosScn.forma_pago == "Tarjeta") ? 
-                    <IonButton color={"warning"} onClick={() => setModalFir(true)} className='cal'>Firmar</IonButton> : <IonButton  onClick={CanjearBoleto} >Canjear</IonButton>} </div> : <div className=' text-center  '> EL BOLETO YA FUE CANEJADO
+                    <div className=' container'>    {(datosScn.id_espacio_localida != 1 && datosScn.forma_pago == "Tarjeta") ?
+                      <IonButton color={"warning"} onClick={() => setModalFir(true)} className='cal'>Firmar</IonButton> : <IonButton id="present-alert" >Canjear</IonButton>} </div> : <div className=' text-center  '> EL BOLETO YA FUE CANEJADO
                       <span className='m-2'>{datosScn.fechacanje} </span></div>
                   }
                 </div> : ''}
               </IonToolbar>
             </IonFooter>
           </IonModal > : ""}
+       
         {
           showModalFir ? <IonModal isOpen={showModalFir}
             onDidDismiss={() => setModalFir(false)}
@@ -464,10 +496,33 @@ const ExploreContainer: React.FC = () => {
             <IonContent>
               <Firmas modal={datosScn}
                 canjear={guardarDatosScann}
+                setModalFir={setModalFir}
               />
             </IonContent>
           </IonModal> : ""
         }
+        <IonModal isOpen={showv}
+          onDidDismiss={() => setShowv(false)}>
+          <IonHeader className=" bg-welcome">
+            <IonToolbar className=""
+              style={{
+                color: "#ffffs"
+              }}
+            >
+
+
+              <IonButtons slot="end"  >
+                <IonButton
+                  onClick={() => setShowv(false)}>
+                  <IonIcon className=" fw-bold" size="large" icon={close} ></IonIcon>
+                </IonButton>
+              </IonButtons>
+            </IonToolbar>
+          </IonHeader>
+          <iframe src={message} width='100%' height='100%'></iframe>
+          
+
+        </IonModal>
         <div className="container">
           <strong style={{
             display: 'none'
@@ -485,6 +540,7 @@ const ExploreContainer: React.FC = () => {
               <IonCol >
                 <IonInput
                   id='barcode'
+                 
                   placeholder='Código de barras o QR'
                   type="number"
                   onKeyPress={e => guardarDatosScann(e.key)}
@@ -494,7 +550,7 @@ const ExploreContainer: React.FC = () => {
               </IonCol>
             </IonGrid>
           </div>
-          {barcodeData ? "" : <p>Barcode Data Registro compra: {datosScn.id}</p>}
+          {barcodeData ? "" : <p className={scanActivo ? "d-none" : ''}>Barcode Data Registro compra: {datosScn.id}</p>}
           {scanActivo ? "" : <div id='content' className='row'>
             <IonButton onClick={startScanner}>Iniciar escáner</IonButton>
 
@@ -507,7 +563,7 @@ const ExploreContainer: React.FC = () => {
 
 
           : ""}
-        {scanActivo ? <div className='d-flex justify-content-center'> <IonButton  className='scan-button px-0' onClick={stopScanner}>Deten escáner</IonButton> </div>: ""}
+        {scanActivo ? <div className='d-flex justify-content-center'> <IonButton className='scan-button px-0' onClick={stopScanner}>Deten escáner</IonButton> </div> : ""}
       </div> : <IonContent fullscreen>
 
         <div className='container-fluid  h-100  d-flex justify-content-center align-items-center'

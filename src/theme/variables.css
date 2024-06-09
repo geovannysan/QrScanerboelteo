@@ -75,7 +75,49 @@ http://ionicframework.com/docs/theming/ */
   --ion-color-light-shade: #d7d8da;
   --ion-color-light-tint: #f5f6f9;
 }
+.custum-file-upload2 {
+  height: 200px;
+  width: 250px;
+  display: flex;
+  flex-direction: column;
+  align-items: space-between;
+  gap: 20px;
+  margin: 5px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #cacaca;
+  background-color: rgba(255, 255, 255, 1);
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0px 48px 35px -48px rgba(0, 0, 0, 0.1);
+}
 
+.custum-file-upload2 .icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custum-file-upload2 .icon svg {
+  height: 70px;
+  fill: rgba(75, 85, 99, 1);
+}
+
+.custum-file-upload2 .text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.custum-file-upload2 .text span {
+  font-weight: 200;
+  color: rgba(75, 85, 99, 1);
+}
+
+.custum-file-upload2 input {
+  display: none;
+}
 ion-app.cameraView,
 ion-app.cameraView ion-content,
 ion-app.cameraView .nav-decor,
@@ -102,6 +144,61 @@ body.scanner-active {
 
 .scanner-active ion-content {
   --background: transparent !important;
+}
+#superpuesto {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 24px;
+  opacity: 1;
+  z-index: 100;
+  transition: opacity 1s ease-in-out;
+}
+.loader {
+  --color: #ffffff;
+  --size: 60px;
+  position: relative;
+  width: var(--size);
+  height: var(--size);
+}
+
+.loader span {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 1px solid var(--color);
+  border-bottom: 1px solid transparent;
+  border-radius: 100%;
+  animation: keyframes-rotate .8s infinite linear;
+}
+
+.loader svg {
+  width: 100%;
+  height: 100%;
+  padding: 15%;
+  fill: var(--color);
+  animation: keyframes-blink .8s infinite ease-in-out;
+}
+@keyframes keyframes-rotate {
+  0% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes keyframes-blink {
+  50% {
+    opacity: 0.8;
+  }
 }
 @media (prefers-color-scheme: dark) {
   /*
