@@ -1,14 +1,11 @@
 package www.example.com.ec;
 import static android.content.ContentValues.TAG;
+import static android.content.Context.WIFI_SERVICE;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.app.Service;
 import android.content.pm.PackageManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.os.Build;
-import android.os.Bundle;
 import android.Manifest;
 import android.content.Context;
 import android.net.wifi.WifiInfo;
@@ -21,7 +18,9 @@ import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 
-import java.lang.reflect.Method;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -31,22 +30,11 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.UUID;
 
-import android.net.wifi.WifiInfo;
-import android.net.wifi.WifiManager;
-import android.content.Context;
 import android.provider.Settings;
-import android.provider.SyncStateContract;
-import android.telephony.SubscriptionInfo;
-import android.telephony.SubscriptionManager;
-import android.telephony.TelephonyManager;
-import android.text.TextUtils;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-import androidx.annotation.RequiresPermission;
-import androidx.constraintlayout.core.motion.utils.Utils;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 @CapacitorPlugin(name="Macandres",
         permissions = {
@@ -67,7 +55,8 @@ public class Macandres extends Plugin {
         JSObject result = new JSObject();
          String Mac = getDeviceId();
         String mac2= getLocalIp();
-        String ssid = getIMEI(this.getContext());
+        String ssid = getIpAccess(this.getContext());
+        Log.d("ssid",""+ssid);
         result.put("IFO red", mac2+" UUID:"+Mac);
         call.resolve(result);
     }
@@ -76,6 +65,35 @@ public class Macandres extends Plugin {
         JSObject result = new JSObject();
         result.put("IFO red", "MAC");
         notifyListeners("EVENT_LISTENER_NAME",result);
+    }
+
+    private String getIpAccess(Context context) {
+        WifiManager wifiManager = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            wifiManager = (WifiManager) context.getSystemService(WIFI_SERVICE);
+        }
+        int ipAddress = wifiManager.getConnectionInfo().getIpAddress();
+        final String formatedIpAddress = String.format("%d.%d.%d.%d", (ipAddress & 0xff), (ipAddress >> 8 & 0xff), (ipAddress >> 16 & 0xff), (ipAddress >> 24 & 0xff));
+        return formatedIpAddress; //192.168.31.2
+    }
+    public String getEthMac() {
+        String macAddress = "Not able to read the MAC address";
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new FileReader("/sys/class/net/eth0/address"));
+            macAddress = br.readLine().toUpperCase();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return macAddress;
     }
 
     public static String getDeviceId()
@@ -110,7 +128,7 @@ public class Macandres extends Plugin {
     @SuppressLint("HardwareIds")
     public static String getWifiMAC(Context context) {
         String mac = null;
-        WifiManager wifiManager = (WifiManager) context.getSystemService(context.WIFI_SERVICE);
+        WifiManager wifiManager = (WifiManager) context.getSystemService(WIFI_SERVICE);
         if (wifiManager == null) {
         }
         try {
@@ -123,7 +141,7 @@ public class Macandres extends Plugin {
     }
     public static String getMacAddresss(Context activity)
     {
-        WifiManager localWifiManager = (WifiManager)activity.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        WifiManager localWifiManager = (WifiManager)activity.getApplicationContext().getSystemService(WIFI_SERVICE);
         WifiInfo localWifiInfo = localWifiManager == null ? null : localWifiManager.getConnectionInfo();
         if (localWifiInfo != null)
         {
@@ -138,7 +156,7 @@ public class Macandres extends Plugin {
     @SuppressLint("MissingPermission")
     public static int getWifiRssi(Context context) {
         try {
-            WifiManager mWifiManager = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            WifiManager mWifiManager = (WifiManager) context.getApplicationContext().getSystemService(WIFI_SERVICE);
             if (mWifiManager != null) {
                 WifiInfo mWifiInfo = mWifiManager.getConnectionInfo();
                 return mWifiInfo.getRssi();
@@ -148,6 +166,67 @@ public class Macandres extends Plugin {
         }
         return 0;
     }
+    private static final int PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION = 1001;
+    private WifiManager wifiManager;
+    private String scanNetwork(Context context) {
+        // Habilitar WiFi si está deshabilitado
+        wifiManager = (WifiManager) context.getSystemService(WIFI_SERVICE);
+
+        // Verificar y solicitar permisos si es necesario
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+           // ActivityCompat.requestPermissions(this.getContext(), new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSIONS_REQUEST_CODE_ACCESS_FINE_LOCATION);
+        }
+        if (!wifiManager.isWifiEnabled()) {
+           // Toast.makeText(this, "Habilitando WiFi...", Toast.LENGTH_SHORT).show();
+            wifiManager.setWifiEnabled(true);
+        }
+
+        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+        int ipAddress = wifiInfo.getIpAddress();
+        String subnet = getSubnetAddress(ipAddress);
+
+        new ScanTask(subnet).execute();
+        return subnet;
+    }
+
+    private String getSubnetAddress(int ipAddress) {
+        return String.format("%d.%d.%d.", (ipAddress & 0xff), (ipAddress >> 8 & 0xff), (ipAddress >> 16 & 0xff));
+    }
+
+    private class ScanTask extends AsyncTask<Void, String, Void> {
+        private String subnet;
+
+        public ScanTask(String subnet) {
+            this.subnet = subnet;
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            for (int i = 1; i < 255; i++) {
+                String host = subnet + i;
+                try {
+                    InetAddress address = InetAddress.getByName(host);
+                    if (address.isReachable(1000)) {
+                        // 1 segundo de timeout
+                        String hostname = address.getHostName();
+                        Log.d("host","hostnam"+hostname);
+                        publishProgress(host,hostname);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(String... values) {
+            super.onProgressUpdate(values);
+            Log.d("ScanTask", "Host reachable: " + values[0]);
+            //Toast.makeText(MainActivity.this, "Host reachable: " + values[0], Toast.LENGTH_SHORT).show();
+        }
+    }
+
     public static String getLocalIp() {
         try {
             Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
