@@ -1,5 +1,5 @@
-import React from 'react';
-import { Redirect, Route } from 'react-router-dom';
+import React, { lazy } from 'react';
+import { Redirect, Route, Switch } from 'react-router-dom';
 import { IonApp, IonRouterOutlet, setupIonicReact } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
 import Home from './pages/Home';
@@ -23,22 +23,22 @@ import '@ionic/react/css/display.css';
 /* Theme variables */
 import './theme/variables.css';
 import ExploreContainer from './components/ExploreContainer';
+import Login from './pages/Index'; // Import Login page
 
 setupIonicReact();
 
 const App: React.FC = () => (
-  <IonApp>
-    <IonReactRouter>
-      <IonRouterOutlet>
-        <Route exact path="/home">
-          <ExploreContainer/>
-        </Route>
-        <Route exact path="/">
-          <Redirect to="/home" />
-        </Route>
-      </IonRouterOutlet>
-    </IonReactRouter>
-  </IonApp>
+
+  <IonReactRouter>
+    <IonRouterOutlet>
+      <Switch>
+        <Route exact path="/home" component={ExploreContainer} />
+        <Route exact path="/login" component={Login} />
+        <Route exact path="/" render={() => <Redirect to="/login" />} />
+      </Switch>
+    </IonRouterOutlet>
+  </IonReactRouter>
+
 );
 
 export default App;

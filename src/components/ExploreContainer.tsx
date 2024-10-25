@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './ExploreContainer.css';
 import { BarcodeScanner } from '@capacitor-community/barcode-scanner';
-import { IonAlert, IonBadge, IonButton, IonButtons, IonCol, IonContent, IonFooter, IonGrid, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonList, IonModal, IonSegment, IonSegmentButton, IonTitle, IonToolbar, isPlatform, useIonViewWillLeave } from '@ionic/react';
+import { IonAlert, IonApp, IonBadge, IonButton, IonButtons, IonCol, IonContent, IonFooter, IonGrid, IonHeader, IonIcon, IonInput, IonItem, IonLabel, IonList, IonModal, IonSegment, IonSegmentButton, IonTitle, IonToolbar, isPlatform, useIonViewWillLeave } from '@ionic/react';
 import { decode } from 'js-base64';
 import { Boleto, Canjear, LoginUser, getUsuario } from '../utils';
 import { close, chevronForward, umbrella } from "ionicons/icons";
@@ -9,22 +9,21 @@ import MAc from './MACAddres';
 import { Device } from '@capacitor/device';
 import { jwtDecode } from 'jwt-decode';
 import Firmas from './Firma';
+import { UserPreferences } from '../Controller';
+import { useHistory } from 'react-router';
+import { Modalcanje } from './Modal';
 
 
 const ExploreContainer: React.FC = () => {
-
+  let history = useHistory()
+  const userPreferences = new UserPreferences();
   const [barcodeData, setBarcodeData] = useState('');
   const [scanActivo, setScanActivo] = useState(false);
   const [datosScn, setScan] = useState<any>({ id: "" })
   const [mac, setMAc] = useState<string>('')
   const [show, setShow] = useState(false);
   const [showv, setShowv] = useState(false);
-  const [loader, setloader] = useState(false);
   const inputRef = useRef<HTMLIonInputElement>(null);
-  const [credenciales, setnombre] = useState({
-    username: '',
-    password: '',
-  });
   const [showModal, setModal] = useState(false);
   const [showModalFir, setModalFir] = useState(false);
   const [tabs, setTabs] = useState('all')
@@ -179,7 +178,13 @@ const ExploreContainer: React.FC = () => {
     setModal(false)
     const idboleto: any = document.getElementById('barcode')
     idboleto.value = ''
-    inputRef.current?.setFocus(); // Enfoca el campo de entrada
+    setTimeout(() => {
+      inputRef.current?.setFocus(); // Enfoca el campo de entrada
+    }, 150);
+  
+    idboleto.focus({
+      preventScroll: true,
+    })
     console.log(inputRef)
 
   }
@@ -191,38 +196,10 @@ const ExploreContainer: React.FC = () => {
     setScanActivo(false);
 
   });
-  const handleSubmit = async (event: any) => {
-    setloader(true)
-    event.preventDefault();
-    const pass: any = document.getElementById("password")
-    try {
-      console.log({ username: credenciales.username.trim(), password: pass.value.trim() })
-      const data: any = await LoginUser({ username: credenciales.username.trim(), password: pass.value.trim() })
-      if (data.success) {
-        setShow(true)
-        const user = jwtDecode(data.token)
-        console.log(user)
-        localStorage.setItem("user", JSON.stringify(user))
-        setloader(false)
-        return
-      } else {
-        alert(data.message)
-        setloader(false)
-        return
-      }
-    } catch (err) {
-      alert("Hubu un error inesperado")
-      setloader(false)
-    }
-  };
-  const handleChange = (target: any) => {
-    setnombre({
-      ...credenciales,
-      [target.name]: target.value
-    })
-  }
   function cerrar() {
-    localStorage.removeItem("user")
+    // localStorage.removeItem("user")
+    userPreferences.removeUser()
+    history.push("/")
     setShow(false)
   }
   const CanjearBoleto = async () => {
@@ -289,6 +266,10 @@ const ExploreContainer: React.FC = () => {
   useEffect(() => {
     getMAc()
     const token = getUsuario()
+    setTimeout(() => {
+      inputRef.current?.setFocus()
+    }, 150);
+    
     if (token) {
       setShow(true)
       getMAc()
@@ -298,13 +279,13 @@ const ExploreContainer: React.FC = () => {
     }
   }, [show])
   return (
+    <IonApp>
+      <IonContent fullscreen={true}
+        style={{
+          background: "#ffffff !important"
+        }}
+      >
 
-    <IonContent fullscreen={true}
-      style={{
-        background: "#ffffff !important"
-      }}
-    >
-      {show ?
         <div>
           {showModal ?
             <IonModal isOpen={showModal}
@@ -511,34 +492,11 @@ const ExploreContainer: React.FC = () => {
               </IonFooter>
             </IonModal > : ""}
 
-          {
-            showModalFir ? <IonModal isOpen={showModalFir}
-              onDidDismiss={() => setModalFir(false)}
-            >
-              <IonHeader className=" bg-welcome">
-                <IonToolbar className=""
-                  style={{
-                    color: "#ffffs"
-                  }}
-                >
-
-
-                  <IonButtons slot="end"  >
-                    <IonButton
-                      onClick={() => setModalFir(false)}>
-                      <IonIcon className=" fw-bold" size="large" icon={close} ></IonIcon>
-                    </IonButton>
-                  </IonButtons>
-                </IonToolbar>
-              </IonHeader>
-              <IonContent>
-                <Firmas modal={datosScn}
-                  canjear={guardarDatosScann}
-                  setModalFir={setModalFir}
-                />
-              </IonContent>
-            </IonModal> : ""
-          }
+          <Modalcanje
+            showModalFir={showModalFir}
+            setModalFir={setModalFir}
+            datosScn={datosScn} guardarDatosScann={guardarDatosScann}
+          />
           <IonModal isOpen={showv}
             onDidDismiss={() => setShowv(false)}>
             <IonHeader className=" bg-welcome">
@@ -580,7 +538,7 @@ const ExploreContainer: React.FC = () => {
                     ref={inputRef}
                     placeholder='Código de barras o QR'
                     type="text"
-                    autofocus
+                    autofocus={true}
                     onKeyDown={e => guardarDatosScanner(e)}
                     counter={true}
                     clearInput={true}
@@ -603,73 +561,9 @@ const ExploreContainer: React.FC = () => {
 
             : ""}
           {scanActivo ? <div className='d-flex justify-content-center'> <IonButton className='scan-button px-0' onClick={stopScanner}>Deten escáner</IonButton> </div> : ""}
-        </div> :
-        <IonContent fullscreen>
-
-          <div className='container-fluid  h-100  d-flex justify-content-center align-items-center'
-          >
-            <div className='container  d-flex justify-content-center '>
-              <div className=' col-12 col-md-4 justify-content-center'>
-                <div className='col-12'>
-
-                </div>
-                <div className="  col-sm-12">
-                  <label className="form-label d-none"></label>
-                  <input type="text"
-                    placeholder='Cédula' className="form-control d-none" name="cedula"
-
-
-                    required />
-                  <IonItem className='iteminput  '>
-                    <IonLabel position="floating">Username</IonLabel>
-                    <IonInput type="text"
-                      placeholder='username' name="username"
-                      value={credenciales.username}
-                      onIonChange={e => handleChange(e.target)}
-
-                      required
-                    >
-                    </IonInput>
-                  </IonItem>
-
-                </div>
-                <div className="col-sm-12  py-1">
-
-                  <IonItem className='iteminput '
-                    style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "end" }}
-                  >
-                    <IonLabel position="floating">Contraseña</IonLabel>
-                    <IonInput
-                      id='password'
-                      value={credenciales.password}
-                      onIonChange={(e) => handleChange(e.target)}
-                      type='password'
-                      placeholder='password' name="password"
-                    ></IonInput>
-                    <IonIcon
-                      className="ion-text-end"
-                      slot="end"
-                      color='white'
-
-                      style={{ paddigTop: '100px' }}
-
-                    />
-
-                  </IonItem>
-                </div>
-                <div className='col-12 d-flex justify-content-center pt-3'>
-                  <IonButton className='btn col-12  ' onClick={handleSubmit} disabled={loader}> Iniciar </IonButton >
-
-                </div>
-              </div>
-            </div>
-
-
-
-
-          </div >
-        </IonContent>}
-    </IonContent>
+        </div>
+      </IonContent>
+    </IonApp>
   );
 };
 

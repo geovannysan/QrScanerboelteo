@@ -1,1 +1,0 @@
-(globalThis.webpackChunkQRScaner=globalThis.webpackChunkQRScaner||[]).push([[92],{3092:()=>{}}]);
