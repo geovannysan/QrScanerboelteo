@@ -38,6 +38,8 @@ export default function Login() {
                 const user: any = jwtDecode(data.token)
 
                 userPreferences.setUser({ ...user })
+                localStorage.setItem("user", JSON.stringify({ ...user }))
+
                 historu.replace("/home")
                 setloader(false)
                 return

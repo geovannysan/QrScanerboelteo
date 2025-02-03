@@ -143,15 +143,29 @@ const ExploreContainer: React.FC = () => {
           setScanActivo(false);
           const dat: any = { id: result.content }
           setScan({ ...datosScn, id: result.content });
-          if (dat.id) {
-            setBarcodeData(dat.id);
-            const data: any = await Boleto(dat.id);
-            idboleto.value = '' + dat.id
-            setModal(true)
-            setScan({ ...datosScn, ...data.boleto, comentario: data.comentario, fechacanje: data.fechacanje });
+          const codigo = dat.id
+          if (codigo != undefined && codigo!= null) {
+            try {
+              setBarcodeData(dat.id);
+              const data: any = await Boleto(dat.id);
+              if (!data.estado) return alert('¡No se encontraron datos!');
+              idboleto.value = '' + dat.id
+              setModal(true)
+              setScan({ ...datosScn, ...data.boleto, comentario: data.comentario, fechacanje: data.fechacanje });
+            } catch (error) {
+              alert("no encontrado");
+              BarcodeScanner.stopScan();
+              (window.document.querySelector('ion-app') as HTMLElement).classList.remove('cameraView');
+            }
+           
           } else {
+            alert("no encontrado");
+            BarcodeScanner.stopScan();
+            (window.document.querySelector('ion-app') as HTMLElement).classList.remove('cameraView');
             setBarcodeData("")
           }
+
+          BarcodeScanner.stopScan();
           (window.document.querySelector('ion-app') as HTMLElement).classList.remove('cameraView');
 
         } else {
@@ -181,7 +195,7 @@ const ExploreContainer: React.FC = () => {
     setTimeout(() => {
       inputRef.current?.setFocus(); // Enfoca el campo de entrada
     }, 150);
-  
+
     idboleto.focus({
       preventScroll: true,
     })
@@ -206,6 +220,7 @@ const ExploreContainer: React.FC = () => {
     setModalFir(false)
     const user: any = getUsuario()
     const nuveo = mac
+    console.log(user)
     const params = {
       "user": user.id,
       "cedula": user.username,
@@ -269,7 +284,7 @@ const ExploreContainer: React.FC = () => {
     setTimeout(() => {
       inputRef.current?.setFocus()
     }, 150);
-    
+
     if (token) {
       setShow(true)
       getMAc()
